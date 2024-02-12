@@ -27,11 +27,48 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-it('로딩이 완료된 경우 상품 리스트가 제대로 모두 노출된다', async () => {});
+it('로딩이 완료된 경우 상품 리스트가 제대로 모두 노출된다', async () => {
+  await render(<ProductList limit={PRODUCT_PAGE_LIMIT} />);
 
-it('보여줄 상품 리스트가 더 있는 경우 show more 버튼이 노출되며, 버튼을 누르면 상품 리스트를 더 가져온다.', async () => {});
+  const ProductCards = await screen.findAllByTestId('product-card');
 
-it('보여줄 상품 리스트가 없는 경우 show more 버튼이 노출되지 않는다.', async () => {});
+  expect(ProductCards).toHaveLength(PRODUCT_PAGE_LIMIT);
+
+  ProductCards.forEach((el, index) => {
+    const ProductCard = within(el);
+    const product = data.products[index];
+
+    expect(ProductCard.getByText(product.title)).toBeInTheDocument();
+    expect(ProductCard.getByText(product.category.name)).toBeInTheDocument();
+    expect(
+      ProductCard.getByText(formatPrice(product.price)),
+    ).toBeInTheDocument();
+    expect(
+      ProductCard.getByRole('button', { name: '장바구니' }),
+    ).toBeInTheDocument();
+    expect(
+      ProductCard.getByRole('button', { name: '구매' }),
+    ).toBeInTheDocument();
+  });
+});
+
+it('보여줄 상품 리스트가 더 있는 경우 show more 버튼이 노출되며, 버튼을 누르면 상품 리스트를 더 가져온다.', async () => {
+  const { user } = await render(<ProductList limit={PRODUCT_PAGE_LIMIT} />);
+
+  const MoreButton = await screen.findByRole('button', { name: 'Show more' });
+  await user.click(MoreButton);
+
+  const ProductCards = await screen.findAllByTestId('product-card');
+  expect(ProductCards).toHaveLength(PRODUCT_PAGE_LIMIT * 2);
+});
+
+it('보여줄 상품 리스트가 없는 경우 show more 버튼이 노출되지 않는다.', async () => {
+  await render(<ProductList limit={50} />);
+
+  const MoreButton = await screen.queryByRole('button', { name: 'Show more' });
+
+  expect(MoreButton).not.toBeInTheDocument();
+});
 
 describe('로그인 상태일 경우', () => {
   beforeEach(() => {
