@@ -35,3 +35,47 @@ describe('pick util 단위테스트', () => {
     expect(pick(obj)).toEqual({});
   });
 });
+
+describe('debounce util 단위테스트', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('특정 시간이 지난 후 함수가 호출된다.', () => {
+    const spy = vi.fn();
+
+    const debounceFn = debounce(spy, 300);
+
+    debounceFn();
+
+    vi.advanceTimersByTime(300);
+
+    expect(spy).toBeCalled();
+  });
+
+  it('연이어 호출해도 마지막 호출 기준으로 지정된 타이머 시간이 지난 경우에만 함수가 호출된다.', () => {
+    const spy = vi.fn();
+
+    const debounceFn = debounce(spy, 300);
+
+    debounceFn();
+
+    vi.advanceTimersByTime(200);
+    debounceFn();
+
+    vi.advanceTimersByTime(100);
+    debounceFn();
+
+    vi.advanceTimersByTime(200);
+    debounceFn();
+
+    vi.advanceTimersByTime(300);
+    debounceFn();
+
+    expect(spy).toBeCalledTimes(1);
+  });
+});
